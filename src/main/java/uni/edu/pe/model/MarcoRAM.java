@@ -1,17 +1,13 @@
 package uni.edu.pe.model;
 
-/**
- * Representa un marco físico (Frame) de la Memoria RAM.
- * Tamaño fijo: 32 KB.
- */
 public class MarcoRAM {
 
     public static final int TAMANO_MARCO_KB = 32;
 
     private final int numeroMarco;
-    private Integer pidProceso;       // null si el marco está libre
-    private Integer numeroPagina;     // página del proceso alojada aquí
-    private int desperdicioKb;        // fragmentación interna dentro de este marco
+    private Integer pidProceso;
+    private Integer numeroPagina;
+    private int desperdicioKb;
 
     public MarcoRAM(int numeroMarco) {
         this.numeroMarco = numeroMarco;
@@ -41,4 +37,3 @@ public class MarcoRAM {
     public Integer getNumeroPagina() { return numeroPagina; }
     public int getDesperdicioKb() { return desperdicioKb; }
 }
-

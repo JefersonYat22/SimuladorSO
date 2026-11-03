@@ -2,13 +2,6 @@ package uni.edu.pe.hardware;
 
 import uni.edu.pe.model.Proceso;
 
-/**
- * Emula la Unidad Central de Procesamiento (CPU).
- * Responsabilidades (Diapositivas 2 y 4):
- *  - Mantiene el Program Counter (PC) apuntando a la instrucción actual.
- *  - Mantiene referencia al proceso actualmente en ejecución.
- *  - Ejecuta ciclos de instrucción mediante el método tick().
- */
 public class CPU {
 
     private int ticksTotales;
@@ -59,4 +52,3 @@ public class CPU {
         this.procesoActual = null;
     }
 }
-
