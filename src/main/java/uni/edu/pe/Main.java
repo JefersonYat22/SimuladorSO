@@ -5,14 +5,12 @@ import uni.edu.pe.model.Proceso;
 
 public class Main {
     public static void main(String[] args) {
-        // Inicializamos el Look & Feel moderno oscuro
         FlatDarkLaf.setup();
 
         System.out.println("==========================================================");
         System.out.println("   SIMULADOR DE SISTEMA OPERATIVO — UNI (Java 21)");
         System.out.println("==========================================================\n");
 
-        // Creamos un proceso de prueba: 120 KB de código ejecutable, 12 ticks de CPU
         Proceso p1 = new Proceso(120, 12);
 
         System.out.println("Proceso Creado: " + p1);
