@@ -55,7 +55,7 @@ public class MotorSO {
         this.gestorInterrupciones = new GestorInterrupciones();
 
         this.planificador = new FCFSStrategy();
-        this.estrategiaAsignacion = new PrimerAjusteStrategy();
+        this.estrategiaAsignacion = new MejorAjusteStrategy();
     }
 
     /**

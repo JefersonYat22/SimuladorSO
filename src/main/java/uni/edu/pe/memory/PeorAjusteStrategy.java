@@ -13,47 +13,45 @@ public class PeorAjusteStrategy implements EstrategiaAsignacion {
 
     @Override
     public List<Integer> asignar(List<Pagina> paginas, MemoriaRAM ram, int pid) {
-       // En paginación pura con marcos fijos, si hay marcos libres se colocan minimizando dispersión
+        // En paginación pura con marcos fijos, si hay marcos libres se colocan minimizando dispersión
         List<Integer> marcosAsignados = new ArrayList<>();
         if (ram.getMarcosLibres() < paginas.size()) {
             return marcosAsignados;
         }
 
 
-        List<Integer> PosiblesMarcos = new ArrayList<>();
-        List<Integer> TamanoMarcos = new ArrayList<>();
         boolean nuevoLibre = false;
+        int tamanoBloque = 0; //inicializamos con un valor grande para encontrar el bloque más pequeño
+        int marcoInicial = -1;
+        int posibleMarcoInicial = -1;
 
         //escanea toda la memoria RAM para encontrar los bloques de marcos libres y sus tamaños
         for (int i = 0; i < MemoriaRAM.TOTAL_MARCOS;i++){
             if (ram.getMapaDeBits().get(i) == false && nuevoLibre==false){
                 nuevoLibre = true;
-                PosiblesMarcos.add(i);
+                posibleMarcoInicial=i;
             }
             if(ram.getMapaDeBits().get(i) == true && nuevoLibre==true){
                 nuevoLibre = false;
-                TamanoMarcos.add(i-PosiblesMarcos.get(PosiblesMarcos.size()-1));
-            }
-        }
-        if(nuevoLibre==true){
-            TamanoMarcos.add(MemoriaRAM.TOTAL_MARCOS-PosiblesMarcos.get(PosiblesMarcos.size()-1));
-        }
-        
-        int mejorIndice = -1;//se encuentra el bloque de marcos libres más ajustado al tamaño de páginas requeridas
-        for (int i = 0; i < PosiblesMarcos.size(); i++) {
-            if (TamanoMarcos.get(i) >= paginas.size()) {
-                if (mejorIndice == -1 || TamanoMarcos.get(i) > TamanoMarcos.get(mejorIndice)) {
-                    mejorIndice = i;
+                if(i - posibleMarcoInicial >  tamanoBloque){
+                    tamanoBloque = i-posibleMarcoInicial;
+                    marcoInicial= posibleMarcoInicial;
                 }
             }
         }
-
-        if (mejorIndice == -1) {
+        if(nuevoLibre==true){
+            if(MemoriaRAM.TOTAL_MARCOS - posibleMarcoInicial <  tamanoBloque){
+                tamanoBloque = MemoriaRAM.TOTAL_MARCOS-posibleMarcoInicial;
+                marcoInicial= posibleMarcoInicial;
+            }            
+        }
+        
+        if (marcoInicial == -1) {
             return marcosAsignados;
         }
 
         for (Pagina pagina : paginas) {
-            int marco = PosiblesMarcos.get(mejorIndice) + marcosAsignados.size();
+            int marco = marcoInicial + marcosAsignados.size();
             if (marco != -1) {
                 ram.cargarPagina(marco, pid, pagina);
                 marcosAsignados.add(marco);
