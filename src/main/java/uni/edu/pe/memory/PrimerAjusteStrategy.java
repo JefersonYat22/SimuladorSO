@@ -18,8 +18,23 @@ public class PrimerAjusteStrategy implements EstrategiaAsignacion {
             return marcosAsignados; // No hay espacio suficiente
         }
 
+        int PrimerMarcoAsignado = -1;
+        boolean nuevoLibre = false;
+        for (int i = 0; i < MemoriaRAM.TOTAL_MARCOS;i++){
+            if (ram.getMapaDeBits().get(i) == false && nuevoLibre==false){
+                nuevoLibre = true;
+                PrimerMarcoAsignado = i;
+            }
+            if(ram.getMapaDeBits().get(i) == true && nuevoLibre==true){
+                nuevoLibre = false;
+                if(PrimerMarcoAsignado != -1 && i-PrimerMarcoAsignado >= paginas.size()){
+                    break;
+                }
+            }
+        }
+
         for (Pagina pagina : paginas) {
-            int marcoLibre = ram.getPrimerMarcoLibre();
+            int marcoLibre = PrimerMarcoAsignado + marcosAsignados.size();
             if (marcoLibre != -1) {
                 ram.cargarPagina(marcoLibre, pid, pagina);
                 marcosAsignados.add(marcoLibre);
