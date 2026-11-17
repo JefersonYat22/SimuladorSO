@@ -2,6 +2,7 @@ package uni.edu.pe.gui;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import uni.edu.pe.core.MotorSO;
+import uni.edu.pe.model.GeneradorProcesos;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,11 +11,11 @@ import java.awt.*;
  * Interfaz Gráfica de Usuario (GUI) moderna del Simulador de SO.
  * Diseñada en Swing con el tema FlatLaf Dark.
  * Muestra en tiempo real:
- *  - Los controles de simulación (Iniciar, Pausar, Paso a Paso).
- *  - La CPU activa y su Program Counter.
- *  - El visor de los 32 marcos de Memoria RAM física.
- *  - Las colas de procesos y dispositivos de E/S.
- *  - El terminal de registro de eventos.
+ * - Los controles de simulación (Iniciar, Pausar, Paso a Paso).
+ * - La CPU activa y su Program Counter.
+ * - El visor de los 32 marcos de Memoria RAM física.
+ * - Las colas de procesos y dispositivos de E/S.
+ * - El terminal de registro de eventos.
  */
 public class VentanaPrincipal extends JFrame {
 
@@ -58,7 +59,7 @@ public class VentanaPrincipal extends JFrame {
 
         JButton btnGen20 = new JButton("+ Generar 20 Procesos");
         btnGen20.addActionListener(e -> {
-            motor.generar20ProcesosAleatorios();
+            GeneradorProcesos.generar20ProcesosSecuenciales().forEach(motor::agregarProceso);
             System.out.println("20 procesos generados en cola de Nuevos.");
         });
 
@@ -75,4 +76,3 @@ public class VentanaPrincipal extends JFrame {
         });
     }
 }
-

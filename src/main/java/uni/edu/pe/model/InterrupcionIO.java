@@ -7,7 +7,6 @@ package uni.edu.pe.model;
  * - Momento de disparo aleatorio durante el ciclo de vida del proceso.
  */
 public class InterrupcionIO {
-    // wazaaaa
     private final DispositivoIO dispositivo;
     private final int tickDisparo; // Momento (instrucción ejecutada del proceso) en que salta
     private final int duracionTotal; // Ticks que tardará en la cola de E/S (5 a 20)
