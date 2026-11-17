@@ -4,7 +4,9 @@ import uni.edu.pe.hardware.CPU;
 import uni.edu.pe.hardware.MemoriaRAM;
 import uni.edu.pe.memory.EstrategiaAsignacion;
 import uni.edu.pe.memory.MMU;
+import uni.edu.pe.memory.MejorAjusteStrategy;
 import uni.edu.pe.memory.PrimerAjusteStrategy;
+import uni.edu.pe.memory.PeorAjusteStrategy;
 import uni.edu.pe.model.EstadoProceso;
 import uni.edu.pe.model.InterrupcionIO;
 import uni.edu.pe.model.Proceso;
@@ -53,7 +55,7 @@ public class MotorSO {
         this.gestorInterrupciones = new GestorInterrupciones();
 
         this.planificador = new FCFSStrategy();
-        this.estrategiaAsignacion = new PrimerAjusteStrategy();
+        this.estrategiaAsignacion = new MejorAjusteStrategy();
     }
 
     /**
