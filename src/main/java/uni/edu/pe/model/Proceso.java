@@ -7,13 +7,13 @@ import java.util.Random;
 
 /**
  * Representa un Proceso y su Bloque de Control de Proceso (PCB).
- * Cumple con todos los requerimientos especificados:
- * - 5 Estados clásicos.
+ * Cumple con todos los requerimientos especificados en el documento:
+ * - 5 Estados clásicos (Nuevo, Listo, Ejecutando, Bloqueado, Finalizado).
  * - Program Counter (PC) explícito.
- * - Desglose de memoria: Código, Datos y Stack/Heap (% del ejecutable).
- * - Segmentación en páginas de 32 KB con registro de desperdicio.
+ * - Desglose de memoria: Código, Datos (% del ejecutable) y Stack/Heap (% del ejecutable).
+ * - División en páginas de 32 KB con registro de fragmentación interna.
  * - Regla del 0.5% de procesos errados (5 por cada 1,000).
- * - Generación de 5 a 20 interrupciones según tamaño y burst.
+ * - Generación de 5 a 20 interrupciones de E/S.
  * - Registro de métricas: tiempos de llegada, espera, retorno y respuesta.
  */
 public class Proceso {
@@ -21,33 +21,32 @@ public class Proceso {
     private static int contadorPid = 1;
     private static final Random random = new Random();
 
-    // ─── CAMPOS OBLIGATORIOS DEL PCB ─────────────────────────────────────
+    // ─── CAMPOS OBLIGATORIOS DEL PCB (Diapositiva 4, punto 3) ────────────
     private final int pid;
     private final String nombre;
     private EstadoProceso estado;
-    private int programCounter;          // PC: Apunta al índice de página o instrucción actual
+    private int programCounter;          // PC: Dirección / contador de la siguiente instrucción
     private int prioridad;
 
-    // ─── TIEMPOS DE CPU (BURST) ──────────────────────────────────────────
+    // ─── TIEMPOS DE CPU (BURST DEL PROCESO) ──────────────────────────────
     private final int burstTotal;
     private int burstRestante;
     private int instruccionesEjecutadas; // Total de ticks completados por este proceso
 
     // ─── DESGLOSE DE MEMORIA (Diapositiva 3) ──────────────────────────────
     private final int tamanoCodigoKb;    // Tamaño del ejecutable
-    private final int tamanoDatosKb;     // Segmento de datos (% del ejecutable)
-    private final int tamanoVariableKb;  // Memoria dinámica (Stack y Heap) (% del ejecutable)
+    private final int tamanoDatosKb;     // Segmento de datos (20% a 40% del ejecutable)
+    private final int tamanoVariableKb;  // Memoria dinámica (Stack/Heap) (15% a 30% del ejecutable)
     private final int tamanoTotalKb;     // Suma total requerida en memoria
 
-    // ─── PAGINACIÓN (32 KB por marco/bloque) ──────────────────────────────
+    // ─── PAGINACIÓN (32 KB por marco/página) ─────────────────────────────
     private final List<Pagina> paginas;
-    private int paginaActualIdx;
 
     // ─── ADMINISTRACIÓN DE ERRORES (Diapositiva 6, punto 8 y 9) ───────────
     private final boolean esErrado;
-    private String codigoError;          // Ej. "ERR_005_SEG_FAULT" si fue cancelado
+    private String codigoError;          // Ej. "ERR_0.5%_PROCESO_DEFECTUOSO" si fue cancelado
 
-    // ─── INTERRUPCIONES DE E/S (Diapositiva 6, puntos 10 y 11) ────────────
+    // ─── INTERRUPCIONES DE E/S (Diapositiva 6 y Diapositivas 10-11) ────────
     private final List<InterrupcionIO> interrupciones;
 
     // ─── MÉTRICAS DE EVALUACIÓN (Diapositiva 7, punto 17) ─────────────────
@@ -56,36 +55,35 @@ public class Proceso {
     private int tiempoFinalizacion;
 
     /**
-     * Constructor manual o programático.
+     * Constructor del Proceso.
      */
     public Proceso(int tamanoCodigoKb, int burstTotal) {
         this.pid = contadorPid++;
         this.nombre = "P" + this.pid;
         this.estado = EstadoProceso.NUEVO;
-        this.burstTotal = burstTotal;
-        this.burstRestante = burstTotal;
-        this.prioridad = burstTotal; // Menor burst = mayor prioridad por defecto
+        this.burstTotal = Math.max(1, burstTotal);
+        this.burstRestante = this.burstTotal;
+        this.prioridad = this.burstTotal; // Menor burst = mayor prioridad por defecto
         this.instruccionesEjecutadas = 0;
         this.programCounter = 0;
 
         // Desglose de memoria según Diapositiva 3:
         // Datos: 20% a 40% del ejecutable
         // Variable (Stack/Heap): 15% a 30% del ejecutable
-        this.tamanoCodigoKb = tamanoCodigoKb;
-        this.tamanoDatosKb = Math.max(8, (int) (tamanoCodigoKb * (0.20 + random.nextDouble() * 0.20)));
-        this.tamanoVariableKb = Math.max(8, (int) (tamanoCodigoKb * (0.15 + random.nextDouble() * 0.15)));
+        this.tamanoCodigoKb = Math.max(16, tamanoCodigoKb);
+        this.tamanoDatosKb = Math.max(8, (int) (this.tamanoCodigoKb * (0.20 + random.nextDouble() * 0.20)));
+        this.tamanoVariableKb = Math.max(8, (int) (this.tamanoCodigoKb * (0.15 + random.nextDouble() * 0.15)));
         this.tamanoTotalKb = this.tamanoCodigoKb + this.tamanoDatosKb + this.tamanoVariableKb;
 
         // Regla del 0.5% (5 por cada 1,000) de procesos errados
         this.esErrado = (random.nextInt(1000) < 5);
         this.codigoError = this.esErrado ? "ERR_0.5%_PROCESO_DEFECTUOSO" : null;
 
-        // Generar páginas de 32 KB
+        // Generar páginas de 32 KB (Memoria lógica/virtual)
         this.paginas = new ArrayList<>();
-        this.paginaActualIdx = 0;
         generarPaginas();
 
-        // Generar 5 a 20 interrupciones según fórmula
+        // Generar interrupciones de E/S
         this.interrupciones = new ArrayList<>();
         generarInterrupciones();
     }
@@ -99,35 +97,22 @@ public class Proceso {
 
     /**
      * Divide la memoria total del proceso en páginas fijas de 32 KB.
+     * El burst es del proceso, no de las páginas.
      */
     private void generarPaginas() {
         int numPaginas = (int) Math.ceil((double) tamanoTotalKb / Pagina.TAMANO_MARCO_KB);
         if (numPaginas == 0) numPaginas = 1;
 
-        int burstRestanteADistribuir = this.burstTotal;
-        int tamanoRestanteADistribuir = this.tamanoTotalKb;
-
+        int tamanoRestante = this.tamanoTotalKb;
         for (int i = 0; i < numPaginas; i++) {
-            int tamanoPag = Math.min(Pagina.TAMANO_MARCO_KB, tamanoRestanteADistribuir);
-            tamanoRestanteADistribuir -= tamanoPag;
-
-            // Distribuir burst entre las páginas
-            int burstPag;
-            if (i == numPaginas - 1) {
-                burstPag = burstRestanteADistribuir;
-            } else {
-                int promedio = Math.max(1, burstRestanteADistribuir / (numPaginas - i));
-                burstPag = Math.max(1, Math.min(promedio, burstRestanteADistribuir - (numPaginas - i - 1)));
-                burstRestanteADistribuir -= burstPag;
-            }
-
-            paginas.add(new Pagina(i, tamanoPag, burstPag));
+            int tamanoPag = Math.min(Pagina.TAMANO_MARCO_KB, tamanoRestante);
+            tamanoRestante -= tamanoPag;
+            paginas.add(new Pagina(i, tamanoPag));
         }
     }
 
     /**
      * Genera entre 5 y 20 interrupciones de E/S con duración entre 5 y 20 ticks.
-     * Fórmula basada en peso de proceso y burst time (Diapositiva 6, punto 10 y 11).
      */
     private void generarInterrupciones() {
         int cantInterrupciones;
@@ -139,9 +124,7 @@ public class Proceso {
             cantInterrupciones = 5 + random.nextInt(5);   // 5 a 9
         }
 
-        // Si el burst es muy pequeño, limitamos para que no hayan más interrupciones que ticks
         cantInterrupciones = Math.min(cantInterrupciones, Math.max(1, burstTotal / 2));
-
         DispositivoIO[] dispositivos = DispositivoIO.values();
 
         for (int i = 0; i < cantInterrupciones; i++) {
@@ -152,7 +135,6 @@ public class Proceso {
             interrupciones.add(new InterrupcionIO(disp, tickDisparo, duracion));
         }
 
-        // Ordenar interrupciones cronológicamente según su tick de disparo
         interrupciones.sort((a, b) -> Integer.compare(a.getTickDisparo(), b.getTickDisparo()));
     }
 
@@ -169,28 +151,36 @@ public class Proceso {
             burstRestante--;
             instruccionesEjecutadas++;
             programCounter++;
-
-            // Ejecutar en la página actual
-            Pagina pagina = getPaginaActual();
-            if (pagina != null) {
-                boolean paginaCompleta = pagina.ejecutarInstruccion();
-                if (paginaCompleta && paginaActualIdx + 1 < paginas.size()) {
-                    paginaActualIdx++; // Avanzamos a la siguiente página lógica
-                }
-            }
         }
 
         return burstRestante == 0;
     }
 
     /**
-     * Retorna la página lógica que se está ejecutando actualmente en CPU.
+     * Retorna el índice de la página lógica donde reside la instrucción actual
+     * apuntada por el Program Counter (PC / 32 KB).
+     * Basado en la Sesión 8 (Diapositiva 22): p = Dirección / TamañoMarco.
      */
-    public Pagina getPaginaActual() {
-        if (paginaActualIdx < paginas.size()) {
-            return paginas.get(paginaActualIdx);
+    public int getPaginaPorProgramCounter() {
+        int idx = programCounter / Pagina.TAMANO_MARCO_KB;
+        return Math.min(idx, Math.max(0, paginas.size() - 1));
+    }
+
+    /**
+     * Retorna la página lógica en el índice dado.
+     */
+    public Pagina getPagina(int index) {
+        if (index >= 0 && index < paginas.size()) {
+            return paginas.get(index);
         }
         return null;
+    }
+
+    /**
+     * Retorna la página lógica actual en ejecución según el Program Counter.
+     */
+    public Pagina getPaginaActual() {
+        return getPagina(getPaginaPorProgramCounter());
     }
 
     /**
@@ -205,16 +195,16 @@ public class Proceso {
         return null;
     }
 
-    // ─── CÁLCULO DE MÉTRICAS (Para el informe y la tabla final) ───────────
-    public int getTiempoRetorno() { // Turnaround Time
+    // ─── CÁLCULO DE MÉTRICAS (Diapositiva 7, punto 17) ─────────────────────
+    public int getTiempoRetorno() { // Turnaround Time: Fin - Arribo
         return tiempoFinalizacion - tiempoLlegada;
     }
 
-    public int getTiempoEspera() {   // Waiting Time
+    public int getTiempoEspera() {   // Waiting Time: Retorno - Burst
         return getTiempoRetorno() - burstTotal;
     }
 
-    public int getTiempoRespuesta() { // Response Time
+    public int getTiempoRespuesta() { // Response Time: Primer Acceso - Arribo
         return (tiempoPrimerAccesoCPU != -1) ? (tiempoPrimerAccesoCPU - tiempoLlegada) : 0;
     }
 
@@ -235,7 +225,6 @@ public class Proceso {
     public int getTamanoDatosKb() { return tamanoDatosKb; }
     public int getTamanoVariableKb() { return tamanoVariableKb; }
     public List<Pagina> getPaginas() { return Collections.unmodifiableList(paginas); }
-    public int getPaginaActualIdx() { return paginaActualIdx; }
     public boolean isEsErrado() { return esErrado; }
     public String getCodigoError() { return codigoError; }
     public void setCodigoError(String codigoError) { this.codigoError = codigoError; }
@@ -250,4 +239,3 @@ public class Proceso {
         return nombre + "(PID=" + pid + ", Estado=" + estado + ", Tam=" + tamanoTotalKb + "KB, Burst=" + burstRestante + "/" + burstTotal + ")";
     }
 }
-
