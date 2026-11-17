@@ -16,7 +16,8 @@ import java.util.*;
 
 /**
  * Motor Principal del Sistema Operativo (El Núcleo Monolítico).
- * Orquesta todos los subsistemas: CPU, RAM, MMU, Planificadores, Colas e Interrupciones.
+ * Orquesta todos los subsistemas: CPU, RAM, MMU, Planificadores, Colas e
+ * Interrupciones.
  */
 public class MotorSO {
 
@@ -26,9 +27,9 @@ public class MotorSO {
     private final MMU mmu;
 
     // Colas Principales del Sistema
-    private final Queue<Proceso> colaTotales;      // Procesos Nuevos
-    private final Queue<Proceso> colaListos;       // Esperando CPU
-    private final List<Proceso> colaFinalizados;   // Terminados
+    private final Queue<Proceso> colaTotales; // Procesos Nuevos
+    private final Queue<Proceso> colaListos; // Esperando CPU
+    private final List<Proceso> colaFinalizados; // Terminados
 
     // Módulos del Núcleo
     private final Despachador despachador;
@@ -73,66 +74,66 @@ public class MotorSO {
     }
 
     /**
-     * Genera automáticamente 20 procesos para la prueba del profesor (Diapositiva 7, punto 17).
-     */
-    public void generar20ProcesosAleatorios() {
-        Random rnd = new Random();
-        for (int i = 0; i < 20; i++) {
-            int tamanoKb = 32 + rnd.nextInt(300); // 32 KB a 332 KB
-            int burst = 10 + rnd.nextInt(41);      // 10 a 50 ticks
-            agregarProceso(new Proceso(tamanoKb, burst));
-        }
-    }
-
-    /**
      * Ejecuta UN SOLO TICK de reloj del Sistema Operativo.
      * Es el corazón del avance paso a paso.
      */
     public void step() {
         int tickActual = cpu.getTicksTotales() + 1;
 
-        // 1. Planificador de Largo Plazo: Admitir procesos de Nuevos a Listos cargando memoria
+        // 1. Planificador de Largo Plazo: Job Queue (Nuevos) -> Ready Queue (Listos)
         admitirProcesosNuevos();
 
-        // 2. Actualizar dispositivos de E/S
-        List<Proceso> ioCompletados = gestorDispositivos.actualizarTicks();
-        for (Proceso p : ioCompletados) {
+        // 2. Controladores de E/S: Actualizar Device Queues y mover a LISTO al terminar
+        List<Proceso> ioTerminados = gestorDispositivos.actualizarTicks();
+        for (Proceso p : ioTerminados) {
             colaListos.offer(p);
             gestorInterrupciones.registrar(tickActual,
-                    GestorInterrupciones.TipoInterrupcion.IO_COMPLETE, p.getPid(), "E/S finalizada. Vuelve a Listos.");
+                    GestorInterrupciones.TipoInterrupcion.IO_COMPLETE,
+                    p.getPid(),
+                    "Fin de E/S. Retorna a Cola de Listos.");
         }
 
-        // 3. Si no hay proceso en CPU, despachar uno de la cola de Listos
+        // 3. Despachador / Planificador de Corto Plazo: Asignar proceso a CPU si está
+        // libre
         if (!cpu.estaOcupada() && !colaListos.isEmpty()) {
             Proceso seleccionado = planificador.seleccionarSiguiente(colaListos);
+
+            // Detección de Trap en el primer contacto con CPU
+            if (seleccionado.isEsErrado()) {
+                ejecutarTrapError(seleccionado, tickActual);
+                return;
+            }
+
             despachador.cambiarContexto(cpu, seleccionado);
         }
 
-        // 4. Ejecutar 1 instrucción en la CPU
+        // 4. Ejecución en CPU
         if (cpu.estaOcupada()) {
             Proceso actual = cpu.getProcesoActual();
 
-            // Verificar si salta interrupción de E/S programada en esta instrucción
+            // 4.1 Verificar interrupción de E/S programada
             InterrupcionIO io = actual.verificarInterrupcionPendiente();
             if (io != null) {
                 despachador.cambiarContexto(cpu, null);
                 gestorDispositivos.bloquearProceso(actual, io);
                 gestorInterrupciones.registrar(tickActual,
-                        GestorInterrupciones.TipoInterrupcion.IO_REQUEST, actual.getPid(),
-                        "Interrupción solicitando " + io.getDispositivo() + " por " + io.getDuracionTotal() + " ticks.");
+                        GestorInterrupciones.TipoInterrupcion.IO_REQUEST,
+                        actual.getPid(),
+                        "Solicitud a " + io.getDispositivo() + " (" + io.getDuracionTotal() + " ticks).");
                 return;
             }
 
-            // Ejecutar tick
+            // 4.2 Ejecutar 1 ciclo de reloj (Tick) en la CPU
             boolean terminado = cpu.tick();
 
             if (terminado) {
+                // Proceso completó exitosamente su burst
                 actual.setEstado(EstadoProceso.FINALIZADO);
                 actual.setTiempoFinalizacion(cpu.getTicksTotales());
                 colaFinalizados.add(actual);
                 despachador.cambiarContexto(cpu, null);
 
-                // Liberar marcos de RAM
+                // Liberación de marcos de RAM
                 actual.getPaginas().forEach(pag -> {
                     if (pag.getMarcoAsignado() != null) {
                         ram.liberarMarco(pag.getMarcoAsignado());
@@ -140,16 +141,18 @@ public class MotorSO {
                     }
                 });
             } else if (planificador instanceof RoundRobinStrategy rr) {
-                // Verificar quantum para Round Robin
+                // 4.3 Quantum Expirado (Interrupción por Timer)
                 if (rr.decrementarYVerificarExpiracion()) {
                     gestorInterrupciones.registrar(tickActual,
-                            GestorInterrupciones.TipoInterrupcion.TIMER, actual.getPid(), "Quantum expirado.");
+                            GestorInterrupciones.TipoInterrupcion.TIMER,
+                            actual.getPid(),
+                            "Quantum agotado. Desalojo de CPU.");
                     despachador.cambiarContexto(cpu, null);
                     colaListos.offer(actual);
                 }
             }
         } else {
-            // CPU ociosa (idle tick)
+            // CPU Ociosa
             cpu.tick();
         }
     }
@@ -170,18 +173,53 @@ public class MotorSO {
     }
 
     // Getters y Configuraciones
-    public CPU getCpu() { return cpu; }
-    public MemoriaRAM getRam() { return ram; }
-    public MMU getMmu() { return mmu; }
-    public Queue<Proceso> getColaTotales() { return colaTotales; }
-    public Queue<Proceso> getColaListos() { return colaListos; }
-    public List<Proceso> getColaFinalizados() { return colaFinalizados; }
-    public GestorDispositivos getGestorDispositivos() { return gestorDispositivos; }
-    public GestorInterrupciones getGestorInterrupciones() { return gestorInterrupciones; }
-    public PlanificadorCPU getPlanificador() { return planificador; }
-    public void setPlanificador(PlanificadorCPU planificador) { this.planificador = planificador; }
-    public EstrategiaAsignacion getEstrategiaAsignacion() { return estrategiaAsignacion; }
-    public void setEstrategiaAsignacion(EstrategiaAsignacion estrategia) { this.estrategiaAsignacion = estrategia; }
+    public CPU getCpu() {
+        return cpu;
+    }
+
+    public MemoriaRAM getRam() {
+        return ram;
+    }
+
+    public MMU getMmu() {
+        return mmu;
+    }
+
+    public Queue<Proceso> getColaTotales() {
+        return colaTotales;
+    }
+
+    public Queue<Proceso> getColaListos() {
+        return colaListos;
+    }
+
+    public List<Proceso> getColaFinalizados() {
+        return colaFinalizados;
+    }
+
+    public GestorDispositivos getGestorDispositivos() {
+        return gestorDispositivos;
+    }
+
+    public GestorInterrupciones getGestorInterrupciones() {
+        return gestorInterrupciones;
+    }
+
+    public PlanificadorCPU getPlanificador() {
+        return planificador;
+    }
+
+    public void setPlanificador(PlanificadorCPU planificador) {
+        this.planificador = planificador;
+    }
+
+    public EstrategiaAsignacion getEstrategiaAsignacion() {
+        return estrategiaAsignacion;
+    }
+
+    public void setEstrategiaAsignacion(EstrategiaAsignacion estrategia) {
+        this.estrategiaAsignacion = estrategia;
+    }
 
     public void reset() {
         cpu.reset();
@@ -193,5 +231,33 @@ public class MotorSO {
         gestorInterrupciones.reset();
         Proceso.reiniciarContadorPid();
     }
-}
 
+    private void ejecutarTrapError(Proceso p, int tickActual) {
+        p.setEstado(EstadoProceso.FINALIZADO);
+        p.setTiempoFinalizacion(tickActual);
+        if (p.getCodigoError() == null) {
+            p.setCodigoError("TRAP_0.5%_PROCESO_DEFECTUOSO");
+        }
+
+        // 1. Desalojar de CPU si estaba en ejecución
+        if (cpu.getProcesoActual() == p) {
+            despachador.cambiarContexto(cpu, null);
+        }
+
+        // 2. Liberar memoria física (marcos de RAM)
+        p.getPaginas().forEach(pag -> {
+            if (pag.getMarcoAsignado() != null) {
+                ram.liberarMarco(pag.getMarcoAsignado());
+                pag.descargarDeRAM();
+            }
+        });
+
+        // 3. Registrar interrupción tipo Trap
+        gestorInterrupciones.registrar(tickActual,
+                GestorInterrupciones.TipoInterrupcion.ERROR_ABORT,
+                p.getPid(),
+                "Trap emitido: " + p.getCodigoError() + " | Recursos liberados.");
+
+        colaFinalizados.add(p);
+    }
+}

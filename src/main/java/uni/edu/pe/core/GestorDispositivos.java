@@ -7,15 +7,10 @@ import uni.edu.pe.model.Proceso;
 
 import java.util.*;
 
-/**
- * Administra las colas de atención de los dispositivos de Entrada/Salida (Diapositivas 4 y 10).
- * Maneja las colas independientes para: Teclado, Disco, Impresora y Pantalla.
- */
 public class GestorDispositivos {
 
-    // Cada dispositivo tiene su propia cola de procesos esperando
+    // Device Queues independientes
     private final Map<DispositivoIO, Queue<Proceso>> colasDispositivos;
-    // Mapa auxiliar para saber qué interrupción está atendiendo cada proceso
     private final Map<Integer, InterrupcionIO> interrupcionActivaPorPid;
 
     public GestorDispositivos() {
@@ -34,51 +29,71 @@ public class GestorDispositivos {
     }
 
     /**
-     * Avanza el tiempo de E/S en 1 tick para los procesos que están siendo atendidos.
-     * Retorna la lista de procesos que completaron su E/S en este tick.
+     * Ticks de controladores de E/S:
+     * Resta 1 tick a la duración del proceso al frente de cada cola automática.
+     * Al llegar a 0, emite la señal de fin de E/S y pasa el proceso a LISTO.
      */
     public List<Proceso> actualizarTicks() {
-        List<Proceso> procesosCompletados = new ArrayList<>();
+        List<Proceso> completados = new ArrayList<>();
 
         for (Map.Entry<DispositivoIO, Queue<Proceso>> entry : colasDispositivos.entrySet()) {
+            DispositivoIO dispositivo = entry.getKey();
+
+            // El teclado interactivo no decrementa por ticks automáticos; espera al usuario
+            if (dispositivo == DispositivoIO.TECLADO) {
+                continue;
+            }
+
             Queue<Proceso> cola = entry.getValue();
             if (!cola.isEmpty()) {
                 Proceso procesoEnAtencion = cola.peek();
                 InterrupcionIO io = interrupcionActivaPorPid.get(procesoEnAtencion.getPid());
 
                 if (io != null && io.decrementarDuracion()) {
-                    // Terminó su requerimiento de E/S
                     cola.poll();
                     interrupcionActivaPorPid.remove(procesoEnAtencion.getPid());
                     procesoEnAtencion.setEstado(EstadoProceso.LISTO);
-                    procesosCompletados.add(procesoEnAtencion);
+                    completados.add(procesoEnAtencion);
                 }
             }
         }
+        return completados;
 
-        return procesosCompletados;
     }
 
     /**
-     * Requerimiento especial para el Teclado (Diapositiva 10, punto 9):
-     * "Para el dispositivo Teclado, capturar la señal que llega y actuar (Cancelación o Continuación)".
+     * Captura la señal interactiva del usuario para el dispositivo Teclado:
+     * - Cancelación: Trap de aborto inmediato -> FINALIZADO con código de error.
+     * - Continuación: Finaliza la espera de E/S -> LISTO para volver a la CPU.
      */
-    public boolean resolverInterrupcionTeclado(int pid, boolean cancelar) {
+    public Proceso responderTeclado(int pid, boolean cancelar) {
         Queue<Proceso> colaTeclado = colasDispositivos.get(DispositivoIO.TECLADO);
+        Proceso objetivo = null;
+
         for (Proceso p : colaTeclado) {
             if (p.getPid() == pid) {
-                colaTeclado.remove(p);
-                interrupcionActivaPorPid.remove(pid);
-                if (cancelar) {
-                    p.setEstado(EstadoProceso.FINALIZADO);
-                    p.setCodigoError("CANCELADO_POR_USUARIO_TECLADO");
-                } else {
-                    p.setEstado(EstadoProceso.LISTO);
-                }
-                return true;
+                objetivo = p;
+                break;
             }
         }
-        return false;
+
+        if (objetivo != null) {
+            colaTeclado.remove(objetivo);
+            InterrupcionIO io = interrupcionActivaPorPid.remove(pid);
+            if (io != null) {
+                while (!io.isCompletada()) {
+                    io.decrementarDuracion(); // Se da por satisfecha la E/S
+                }
+            }
+
+            if (cancelar) {
+                objetivo.setEstado(EstadoProceso.FINALIZADO);
+                objetivo.setCodigoError("CANCELADO_POR_USUARIO_TECLADO");
+            } else {
+                objetivo.setEstado(EstadoProceso.LISTO);
+            }
+        }
+        return objetivo;
     }
 
     public Queue<Proceso> getCola(DispositivoIO disp) {
@@ -90,4 +105,3 @@ public class GestorDispositivos {
         interrupcionActivaPorPid.clear();
     }
 }
-
