@@ -62,17 +62,8 @@ public class VentanaPrincipal extends JFrame {
             System.out.println("20 procesos generados en cola de Nuevos.");
         });
 
-        JButton ImprimirMemoria = new JButton("+ Imprimir Memoria");
-        ImprimirMemoria.addActionListener(e -> {
-            for (int i = 0; i < motor.getRam().getMapaDeBits().size(); i++) {
-                System.out.print( motor.getRam().getMapaDeBits().get(i) ? '1' : '0');
-            }
-            System.out.println();
-        });
-
         barra.add(btnStep);
         barra.add(btnGen20);
-        barra.add(ImprimirMemoria);
         return barra;
     }
 
