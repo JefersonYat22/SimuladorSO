@@ -5,7 +5,8 @@ import java.util.Queue;
 
 /**
  * Interfaz del Patrón Strategy para la Planificación de CPU a Corto Plazo.
- * Define el contrato que deben cumplir todas las políticas requeridas (Diap. 4, punto 5).
+ * Define el contrato que deben cumplir todas las políticas requeridas (Diap. 4,
+ * punto 5).
  */
 public interface PlanificadorCPU {
 
@@ -23,5 +24,12 @@ public interface PlanificadorCPU {
      * Nombre legible del algoritmo para la interfaz gráfica y reportes.
      */
     String getNombre();
-}
 
+    default boolean debeExpropiar(Proceso Ejecutandose, Proceso candidato) {
+        return false;
+    }
+
+    default void aplicarAging(Queue<Proceso> colalistos) {
+
+    }
+}

@@ -11,13 +11,18 @@ public class SJFStrategy implements PlanificadorCPU {
 
     private final boolean apropiativo;
 
+    public SJFStrategy() {
+        this(false);
+    }
+
     public SJFStrategy(boolean apropiativo) {
         this.apropiativo = apropiativo;
     }
 
     @Override
     public Proceso seleccionarSiguiente(Queue<Proceso> colaListos) {
-        if (colaListos.isEmpty()) return null;
+        if (colaListos.isEmpty())
+            return null;
 
         Proceso masCorto = colaListos.stream()
                 .min(Comparator.comparingInt(Proceso::getBurstRestante))
@@ -27,6 +32,13 @@ public class SJFStrategy implements PlanificadorCPU {
             colaListos.remove(masCorto);
         }
         return masCorto;
+    }
+
+    public boolean debeExpropiar(Proceso Ejecutandose, Proceso candidato) {
+        if (!apropiativo || Ejecutandose == null || candidato == null) {
+            return false;
+        }
+        return candidato.getBurstRestante() < Ejecutandose.getBurstRestante();
     }
 
     @Override
@@ -39,4 +51,3 @@ public class SJFStrategy implements PlanificadorCPU {
         return apropiativo ? "SRTF (SJF Apropiativo)" : "SJF (No Apropiativo)";
     }
 }
-

@@ -5,7 +5,8 @@ import java.util.Queue;
 
 /**
  * Round Robin (RR): Asigna un quantum de tiempo fijo a cada proceso.
- * El quantum puede ser modificado en tiempo de ejecución (Diapositiva 5, punto 7).
+ * El quantum puede ser modificado en tiempo de ejecución (Diapositiva 5, punto
+ * 7).
  */
 public class RoundRobinStrategy implements PlanificadorCPU {
 
@@ -34,10 +35,18 @@ public class RoundRobinStrategy implements PlanificadorCPU {
 
     public void setQuantum(int nuevoQuantum) {
         this.quantum = Math.max(1, nuevoQuantum);
+        if (this.quantumRestante > this.quantum) {
+            this.quantumRestante = this.quantum;
+        }
     }
 
-    public int getQuantum() { return quantum; }
-    public int getQuantumRestante() { return quantumRestante; }
+    public int getQuantum() {
+        return quantum;
+    }
+
+    public int getQuantumRestante() {
+        return quantumRestante;
+    }
 
     @Override
     public boolean esApropiativo() {
@@ -49,4 +58,3 @@ public class RoundRobinStrategy implements PlanificadorCPU {
         return "Round Robin (Quantum = " + quantum + ")";
     }
 }
-
