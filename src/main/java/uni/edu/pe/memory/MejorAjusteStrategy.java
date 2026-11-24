@@ -6,15 +6,10 @@ import uni.edu.pe.model.Pagina;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Mejor Ajuste (Best-Fit): En paginación con mapa de bits, busca el bloque o conjunto
- * de marcos contiguos más ajustado al tamaño de páginas requeridas para minimizar fragmentación externa.
- */
 public class MejorAjusteStrategy implements EstrategiaAsignacion {
 
     @Override
     public List<Integer> asignar(List<Pagina> paginas, MemoriaRAM ram, int pid) {
-        // En paginación pura con marcos fijos, si hay marcos libres se colocan minimizando dispersión
         List<Integer> marcosAsignados = new ArrayList<>();
         if (ram.getMarcosLibres() < paginas.size()) {
             return marcosAsignados;
@@ -26,7 +21,6 @@ public class MejorAjusteStrategy implements EstrategiaAsignacion {
         int marcoInicial = -1;
         int posibleMarcoInicial = -1;
 
-        //escanea toda la memoria RAM para encontrar los bloques de marcos libres y sus tamaños
         for (int i = 0; i < MemoriaRAM.TOTAL_MARCOS;i++){
             if (ram.getMapaDeBits().get(i) == false && nuevoLibre==false){
                 nuevoLibre = true;
