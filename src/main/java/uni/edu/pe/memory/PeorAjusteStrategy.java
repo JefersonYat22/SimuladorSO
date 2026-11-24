@@ -6,9 +6,6 @@ import uni.edu.pe.model.Pagina;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Peor Ajuste (Worst-Fit): Asigna páginas en las regiones con mayores huecos disponibles.
- */
 public class PeorAjusteStrategy implements EstrategiaAsignacion {
 
     @Override
