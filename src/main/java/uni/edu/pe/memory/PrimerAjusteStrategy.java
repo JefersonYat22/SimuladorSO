@@ -6,9 +6,6 @@ import uni.edu.pe.model.Pagina;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Primer Ajuste (First-Fit): Asigna las páginas en los primeros marcos libres que encuentra.
- */
 public class PrimerAjusteStrategy implements EstrategiaAsignacion {
 
     @Override
