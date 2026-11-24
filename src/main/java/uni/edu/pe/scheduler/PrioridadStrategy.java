@@ -4,9 +4,6 @@ import uni.edu.pe.model.Proceso;
 import java.util.Comparator;
 import java.util.Queue;
 
-/**
- * Planificación por Prioridades: Menor valor numérico = Mayor prioridad.
- */
 public class PrioridadStrategy implements PlanificadorCPU {
 
     private final boolean apropiativo;
