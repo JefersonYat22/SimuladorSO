@@ -3,11 +3,6 @@ package uni.edu.pe.scheduler;
 import uni.edu.pe.model.Proceso;
 import java.util.Queue;
 
-/**
- * Round Robin (RR): Asigna un quantum de tiempo fijo a cada proceso.
- * El quantum puede ser modificado en tiempo de ejecución (Diapositiva 5, punto
- * 7).
- */
 public class RoundRobinStrategy implements PlanificadorCPU {
 
     private int quantum;
