@@ -3,9 +3,6 @@ package uni.edu.pe.scheduler;
 import uni.edu.pe.model.Proceso;
 import java.util.Queue;
 
-/**
- * First-Come, First-Served (FCFS): Atiende por estricto orden de llegada. No apropiativo.
- */
 public class FCFSStrategy implements PlanificadorCPU {
 
     @Override
