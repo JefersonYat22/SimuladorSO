@@ -4,9 +4,6 @@ import uni.edu.pe.model.Proceso;
 import java.util.Comparator;
 import java.util.Queue;
 
-/**
- * Shortest Job First (SJF): Selecciona el proceso con menor ráfaga restante.
- */
 public class SJFStrategy implements PlanificadorCPU {
 
     private final boolean apropiativo;
