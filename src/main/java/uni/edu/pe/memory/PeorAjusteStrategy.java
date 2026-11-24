@@ -6,14 +6,10 @@ import uni.edu.pe.model.Pagina;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Peor Ajuste (Worst-Fit): Asigna páginas en las regiones con mayores huecos disponibles.
- */
 public class PeorAjusteStrategy implements EstrategiaAsignacion {
 
     @Override
     public List<Integer> asignar(List<Pagina> paginas, MemoriaRAM ram, int pid) {
-        // En paginación pura con marcos fijos, si hay marcos libres se colocan minimizando dispersión
         List<Integer> marcosAsignados = new ArrayList<>();
         if (ram.getMarcosLibres() < paginas.size()) {
             return marcosAsignados;
@@ -25,7 +21,6 @@ public class PeorAjusteStrategy implements EstrategiaAsignacion {
         int marcoInicial = -1;
         int posibleMarcoInicial = -1;
 
-        //escanea toda la memoria RAM para encontrar los bloques de marcos libres y sus tamaños
         for (int i = 0; i < MemoriaRAM.TOTAL_MARCOS;i++){
             if (ram.getMapaDeBits().get(i) == false && nuevoLibre==false){
                 nuevoLibre = true;
