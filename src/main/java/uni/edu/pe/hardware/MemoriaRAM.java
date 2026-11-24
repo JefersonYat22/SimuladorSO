@@ -7,15 +7,6 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
-/**
- * Emula la Memoria RAM Física.
- * Especificaciones:
- *  - Capacidad Total: 1024 KB (1 MB).
- *  - Tamaño de Marco: 32 KB ($2^5$).
- *  - Total de Marcos Físicos: 32 marcos.
- *  - Estructura de Administración (Diapositiva 8, punto 5): MAPA DE BITS (BitSet).
- *    0 = Marco libre, 1 = Marco ocupado.
- */
 public class MemoriaRAM {
 
     public static final int TOTAL_MARCOS = 32;
