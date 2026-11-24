@@ -3,10 +3,6 @@ package uni.edu.pe.core;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Módulo encargado de administrar señales e interrupciones (Diapositivas 2 y 4).
- * Maneja eventos de Timer, Requerimientos de E/S, Finalizaciones de E/S y Fallos de Página.
- */
 public class GestorInterrupciones {
 
     public enum TipoInterrupcion {
