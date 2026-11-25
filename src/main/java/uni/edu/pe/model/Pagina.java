@@ -1,27 +1,30 @@
 package uni.edu.pe.model;
 
+/**
+ * Representa una página lógica de un proceso según los requerimientos:
+ * - El tamaño del bloque/marco de memoria es múltiplo de 2^n: 4 KB.
+ * - Registra la fragmentación interna (desperdicio de memoria: 4 KB - tamanoRealKb).
+ * - Mantiene los bits de control para memoria virtual y algoritmos de reemplazo:
+ *   bitValidez (v/i) y bitReferencia (R para el algoritmo del Reloj).
+ */
 public class Pagina {
 
-    public static final int TAMANO_MARCO_KB = 32;
+    public static final int TAMANO_MARCO_KB = 4;
 
     private final int numeroPagina;
-    private final int tamanoRealKb;      
-    private final int desperdicioKb;     
-    private int burstTotalPagina;
-    private int burstRestantePagina;
+    private final int tamanoRealKb;      // Tamaño ocupado real (ej. si quedan 2 KB, ocupa 2)
+    private final int desperdicioKb;     // Fragmentación interna: 4 - tamanoRealKb
 
-    // Bits de control de memoria virtual
-    private boolean bitValidez;          
-    private boolean bitReferencia;       
-    private Integer marcoAsignado;       
+    // Bits de control de memoria virtual (Sesión 8)
+    private boolean bitValidez;          // true = en RAM (v), false = en Disco / Swap (i)
+    private boolean bitReferencia;       // Bit R: 1 = referenciada (para algoritmo Reloj / 2da Oportunidad)
+    private Integer marcoAsignado;       // Número de marco físico en RAM (null si está en swap)
 
-    public Pagina(int numeroPagina, int tamanoRealKb, int burstTotalPagina) {
+    public Pagina(int numeroPagina, int tamanoRealKb) {
         this.numeroPagina = numeroPagina;
         this.tamanoRealKb = Math.min(tamanoRealKb, TAMANO_MARCO_KB);
         this.desperdicioKb = TAMANO_MARCO_KB - this.tamanoRealKb;
-        this.burstTotalPagina = burstTotalPagina;
-        this.burstRestantePagina = burstTotalPagina;
-        this.bitValidez = false;        
+        this.bitValidez = false;         // Por defecto inicia en memoria virtual (disco)
         this.bitReferencia = false;
         this.marcoAsignado = null;
     }
@@ -38,12 +41,8 @@ public class Pagina {
         this.bitReferencia = false;
     }
 
-    public boolean ejecutarInstruccion() {
-        if (burstRestantePagina > 0) {
-            burstRestantePagina--;
-            this.bitReferencia = true; 
-        }
-        return burstRestantePagina == 0;
+    public void referenciar() {
+        this.bitReferencia = true;
     }
 
     // Getters y Setters
@@ -57,14 +56,6 @@ public class Pagina {
 
     public int getDesperdicioKb() {
         return desperdicioKb;
-    }
-
-    public int getBurstTotalPagina() {
-        return burstTotalPagina;
-    }
-
-    public int getBurstRestantePagina() {
-        return burstRestantePagina;
     }
 
     public boolean isBitValidez() {
@@ -94,7 +85,6 @@ public class Pagina {
     @Override
     public String toString() {
         return "Pagina[" + numeroPagina + "] (Tam=" + tamanoRealKb + "KB, Desperdicio=" + desperdicioKb +
-                "KB, BurstRest=" + burstRestantePagina + ", RAM=" + (bitValidez ? "Marco " + marcoAsignado : "Disco") + ")";
+                "KB, RAM=" + (bitValidez ? "Marco " + marcoAsignado : "Disco") + ", R=" + (bitReferencia ? "1" : "0") + ")";
     }
 }
-
