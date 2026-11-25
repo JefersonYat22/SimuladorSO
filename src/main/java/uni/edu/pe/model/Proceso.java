@@ -31,7 +31,7 @@ public class Proceso {
     // ─── TIEMPOS DE CPU (BURST DEL PROCESO) ──────────────────────────────
     private final int burstTotal;
     private int burstRestante;
-    private int instruccionesEjecutadas; // Total de ticks completados por este proceso
+    private int instruccionesEjecutadas; 
 
     // ─── DESGLOSE DE MEMORIA (Diapositiva 3) ──────────────────────────────
     private final int tamanoCodigoKb;    // Tamaño del ejecutable
@@ -42,14 +42,12 @@ public class Proceso {
     // ─── PAGINACIÓN (4 KB por marco/página) ──────────────────────────────
     private final List<Pagina> paginas;
 
-    // ─── ADMINISTRACIÓN DE ERRORES (Diapositiva 6, punto 8 y 9) ───────────
     private final boolean esErrado;
     private String codigoError;          // Ej. "ERR_0.5%_PROCESO_DEFECTUOSO" si fue cancelado
 
     // ─── INTERRUPCIONES DE E/S (Diapositiva 6 y Diapositivas 10-11) ────────
     private final List<InterrupcionIO> interrupciones;
 
-    // ─── MÉTRICAS DE EVALUACIÓN (Diapositiva 7, punto 17) ─────────────────
     private int tiempoLlegada;
     private int tiempoPrimerAccesoCPU = -1;
     private int tiempoFinalizacion;
@@ -75,7 +73,6 @@ public class Proceso {
         this.tamanoVariableKb = Math.max(8, (int) (this.tamanoCodigoKb * (0.15 + random.nextDouble() * 0.15)));
         this.tamanoTotalKb = this.tamanoCodigoKb + this.tamanoDatosKb + this.tamanoVariableKb;
 
-        // Regla del 0.5% (5 por cada 1,000) de procesos errados
         this.esErrado = (random.nextInt(1000) < 5);
         this.codigoError = this.esErrado ? "ERR_0.5%_PROCESO_DEFECTUOSO" : null;
 
@@ -88,9 +85,6 @@ public class Proceso {
         generarInterrupciones();
     }
 
-    /**
-     * Reinicia el contador de PIDs (útil para reiniciar simulaciones).
-     */
     public static void reiniciarContadorPid() {
         contadorPid = 1;
     }
@@ -138,10 +132,6 @@ public class Proceso {
         interrupciones.sort((a, b) -> Integer.compare(a.getTickDisparo(), b.getTickDisparo()));
     }
 
-    /**
-     * Ejecuta UN tick del proceso en la CPU.
-     * Retorna true si el proceso ha completado todo su burst.
-     */
     public boolean ejecutarTick(int tickRelojGlobal) {
         if (tiempoPrimerAccesoCPU == -1) {
             tiempoPrimerAccesoCPU = tickRelojGlobal;
@@ -208,7 +198,6 @@ public class Proceso {
         return (tiempoPrimerAccesoCPU != -1) ? (tiempoPrimerAccesoCPU - tiempoLlegada) : 0;
     }
 
-    // ─── GETTERS Y SETTERS ───────────────────────────────────────────────
     public int getPid() { return pid; }
     public String getNombre() { return nombre; }
     public EstadoProceso getEstado() { return estado; }

@@ -1,15 +1,9 @@
 package uni.edu.pe.model;
 
-/**
- * Representa una solicitud de E/S programada para un proceso.
- * El profesor exige:
- * - Duración aleatoria entre 5 y 20 unidades de tiempo.
- * - Momento de disparo aleatorio durante el ciclo de vida del proceso.
- */
 public class InterrupcionIO {
     private final DispositivoIO dispositivo;
-    private final int tickDisparo; // Momento (instrucción ejecutada del proceso) en que salta
-    private final int duracionTotal; // Ticks que tardará en la cola de E/S (5 a 20)
+    private final int tickDisparo; 
+    private final int duracionTotal; 
     private int duracionRestante;
     private boolean completada;
 

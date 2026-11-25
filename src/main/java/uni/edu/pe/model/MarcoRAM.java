@@ -9,9 +9,9 @@ public class MarcoRAM {
     public static final int TAMANO_MARCO_KB = 4;
 
     private final int numeroMarco;
-    private Integer pidProceso;       // null si el marco está libre
-    private Integer numeroPagina;     // página del proceso alojada aquí
-    private int desperdicioKb;        // fragmentación interna dentro de este marco
+    private Integer pidProceso;      
+    private Integer numeroPagina;    
+    private int desperdicioKb;        
 
     public MarcoRAM(int numeroMarco) {
         this.numeroMarco = numeroMarco;

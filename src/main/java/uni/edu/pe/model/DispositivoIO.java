@@ -11,31 +11,19 @@ public enum DispositivoIO { // Un enum (Enumeración) es un tipo de dato especia
     PANTALLA("Pantalla"),
     RED("Tarjeta de Red");
 
-    private final String nombre;  // final significa que es inmutable: una vez que se le asigna valor al
-    // iniciar el programa, nadie lo puede cambiar jamás
+    private final String nombre;  
 
     DispositivoIO(String nombre) {
         this.nombre = nombre;
-    } // Constructor
+    } 
 
     public String getNombre() {
         return nombre;
-    } // Método público para obtener el nombre del dispositivo
+    } 
 
     @Override
     public String toString() {
         return nombre;
     }
-
-    // En Java, todas las clases y enums heredan automáticamente de una clase padre universal llamada Object
-    // Esa clase Object ya viene de fábrica con varios métodos estándar creados por los ingenieros de Java.
-    // Uno de ellos es el toString()
-    // Por defecto, si no haces nada e intentas imprimir un objeto en pantalla:
-    // System.out.println(DispositivoIO.TECLADO);
-    // El toString() original de Java imprime algo técnico y feo, como la posición de memoria:
-    // uni.edu.pe.model.DispositivoIO@7229724f
-    // @Override: "No uses la versión fea por defecto de toString. A partir de ahora, sobreescribe esa función
-    // con mi propia lógica: cada vez que alguien intente convertir este dispositivo a texto, entrégale
-    // su variable nombre"
 }
 

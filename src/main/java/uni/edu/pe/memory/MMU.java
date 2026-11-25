@@ -33,7 +33,7 @@ public class MMU {
      *
      * @param proceso          Proceso que ejecuta el acceso.
      * @param numeroPagina     Índice de la página virtual (p).
-     * @param desplazamientoKb Desplazamiento dentro del bloque (d) en KB (0 a 31 KB).
+     * @param desplazamientoKb Desplazamiento dentro del bloque (d) en KB (0 a TAMANO_MARCO_KB - 1).
      * @return ResultadoTraduccionMMU con la dirección física y marco asignado.
      * @throws FalloPaginaException      Si la página no está cargada en RAM física (bit v/i = i).
      * @throws ViolacionMemoriaException Si la página o desplazamiento exceden los límites del proceso.
