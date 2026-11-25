@@ -15,7 +15,7 @@ import java.util.*;
  * 3. Direccionamiento lógico (virtual) vs físico (RAM).
  * 4. Gestión de traducción y resolución de Fallos de Página mediante la MMU.
  * 5. Administración del mapa de bits y políticas de reemplazo de páginas (Reloj / FIFO).
- * 6. Control continuo de fragmentación interna (desperdicio en KB) en bloques de 32 KB.
+ * 6. Control continuo de fragmentación interna (desperdicio en KB) en bloques de 4 KB.
  */
 public class GestorMemoriaVirtual {
 

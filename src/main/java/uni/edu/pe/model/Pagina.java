@@ -2,18 +2,18 @@ package uni.edu.pe.model;
 
 /**
  * Representa una página lógica de un proceso según los requerimientos:
- * - El tamaño del bloque/marco de memoria es múltiplo de 2^n: 32 KB.
- * - Registra la fragmentación interna (desperdicio de memoria: 32 KB - tamanoRealKb).
+ * - El tamaño del bloque/marco de memoria es múltiplo de 2^n: 4 KB.
+ * - Registra la fragmentación interna (desperdicio de memoria: 4 KB - tamanoRealKb).
  * - Mantiene los bits de control para memoria virtual y algoritmos de reemplazo:
  *   bitValidez (v/i) y bitReferencia (R para el algoritmo del Reloj).
  */
 public class Pagina {
 
-    public static final int TAMANO_MARCO_KB = 32;
+    public static final int TAMANO_MARCO_KB = 4;
 
     private final int numeroPagina;
-    private final int tamanoRealKb;      // Tamaño ocupado real (ej. si quedan 10 KB, ocupa 10)
-    private final int desperdicioKb;     // Fragmentación interna: 32 - tamanoRealKb
+    private final int tamanoRealKb;      // Tamaño ocupado real (ej. si quedan 2 KB, ocupa 2)
+    private final int desperdicioKb;     // Fragmentación interna: 4 - tamanoRealKb
 
     // Bits de control de memoria virtual (Sesión 8)
     private boolean bitValidez;          // true = en RAM (v), false = en Disco / Swap (i)

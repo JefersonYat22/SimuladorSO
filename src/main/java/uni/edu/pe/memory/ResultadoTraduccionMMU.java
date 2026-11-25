@@ -18,8 +18,8 @@ public class ResultadoTraduccionMMU {
         this.numeroPagina = numeroPagina;
         this.numeroMarco = numeroMarco;
         this.desplazamientoKb = desplazamientoKb;
-        // Dirección Física Base = marco * 32 KB + desplazamiento
-        this.direccionFisicaKb = (numeroMarco * 32) + desplazamientoKb;
+        // Dirección Física Base = marco * TAMANO_MARCO_KB + desplazamiento
+        this.direccionFisicaKb = (numeroMarco * uni.edu.pe.model.Pagina.TAMANO_MARCO_KB) + desplazamientoKb;
     }
 
     public int getPid() { return pid; }

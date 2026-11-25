@@ -1,14 +1,15 @@
 package uni.edu.pe.model;
 
 /**
- * Representa los dispositivos de Entrada / Salida exigidos por el proyecto (mínimo 3 a 5).
+ * Representa los dispositivos de Entrada / Salida exigidos por el proyecto (mínimo 5 dispositivos según Diapositiva 4).
  */
 public enum DispositivoIO { // Un enum (Enumeración) es un tipo de dato especial que sirve para definir un conjunto
     // cerrado, fijo y limitado de opciones que nunca van a cambiar mientras el programa corre.
     TECLADO("Teclado"),
     DISCO("Disco"),
     IMPRESORA("Impresora"),
-    PANTALLA("Pantalla");
+    PANTALLA("Pantalla"),
+    RED("Tarjeta de Red");
 
     private final String nombre;  // final significa que es inmutable: una vez que se le asigna valor al
     // iniciar el programa, nadie lo puede cambiar jamás

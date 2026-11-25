@@ -15,7 +15,7 @@ public interface AlgoritmoReemplazo {
     /**
      * Selecciona una página víctima para ser desalojada a Swap cuando la RAM está llena.
      *
-     * @param marcos        Lista de los 32 marcos físicos de la RAM.
+     * @param marcos        Lista de los 256 marcos físicos de la RAM.
      * @param tablaProcesos Mapa de procesos activos en el sistema (por PID) para acceder a sus páginas.
      * @return PaginaVictima seleccionada con su marco y datos de control.
      */

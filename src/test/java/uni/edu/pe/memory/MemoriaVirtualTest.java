@@ -58,12 +58,12 @@ public class MemoriaVirtualTest {
         assertTrue(pag0.isBitValidez());
         int marco = pag0.getMarcoAsignado();
 
-        // Traducir dirección lógica: página 0, offset 10 KB
-        ResultadoTraduccionMMU res = gestor.getMmu().traducir(p, 0, 10);
+        // Traducir dirección lógica: página 0, offset 2 KB
+        ResultadoTraduccionMMU res = gestor.getMmu().traducir(p, 0, 2);
         assertNotNull(res);
         assertEquals(marco, res.getNumeroMarco());
-        assertEquals(10, res.getDesplazamientoKb());
-        assertEquals((marco * 32) + 10, res.getDireccionFisicaKb());
+        assertEquals(2, res.getDesplazamientoKb());
+        assertEquals((marco * Pagina.TAMANO_MARCO_KB) + 2, res.getDireccionFisicaKb());
 
         // Verificar que el bit de referencia R se puso en 1 al acceder
         assertTrue(pag0.isBitReferencia());
@@ -76,7 +76,7 @@ public class MemoriaVirtualTest {
 
         // Intentar traducir la página 1 que está en Swap -> Debe arrojar FalloPaginaException
         assertThrows(FalloPaginaException.class, () -> {
-            gestor.getMmu().traducir(p, 1, 5);
+            gestor.getMmu().traducir(p, 1, 2);
         });
 
         assertEquals(1, gestor.getMmu().getTotalFallosPagina());
@@ -92,9 +92,9 @@ public class MemoriaVirtualTest {
             gestor.getMmu().traducir(p, 99, 0);
         });
 
-        // Offset mayor o igual a 32 KB -> Violación de memoria
+        // Offset mayor o igual a 4 KB -> Violación de memoria
         assertThrows(ViolacionMemoriaException.class, () -> {
-            gestor.getMmu().traducir(p, 0, 32);
+            gestor.getMmu().traducir(p, 0, Pagina.TAMANO_MARCO_KB);
         });
     }
 
@@ -107,7 +107,7 @@ public class MemoriaVirtualTest {
 
         // Al acceder a través de gestor.accederMemoria(), debe atrapar el Page Fault,
         // resolverlo cargando en un marco libre de RAM, y retornar la dirección física válida
-        ResultadoTraduccionMMU res = gestor.accederMemoria(p, 1, 15);
+        ResultadoTraduccionMMU res = gestor.accederMemoria(p, 1, 2);
         assertNotNull(res);
         assertTrue(p.getPagina(1).isBitValidez(), "Página 1 ahora debe estar en RAM");
         assertEquals(1, gestor.getTotalSwapIn(), "Debe registrarse 1 Swap-in");
@@ -115,11 +115,11 @@ public class MemoriaVirtualTest {
 
     @Test
     void testReemplazoPorRelojCuandoRAMEstaTotalmenteLlena() {
-        // La RAM tiene 32 marcos. Vamos a llenarla por completo.
-        // Creamos procesos hasta copar los 32 marcos:
-        for (int i = 0; i < 16; i++) {
-            Proceso p = new Proceso(32, 5); // Cada uno tiene 2 páginas de 32 KB -> 16 * 2 = 32 marcos
-            gestor.admitirProceso(p, true);
+        // La RAM tiene MemoriaRAM.TOTAL_MARCOS (256) marcos. Vamos a llenarla por completo.
+        // Cargamos 256 procesos en carga parcial (1 marco de 4 KB cada uno):
+        for (int i = 0; i < MemoriaRAM.TOTAL_MARCOS; i++) {
+            Proceso p = new Proceso(4, 5);
+            gestor.admitirProceso(p, false);
         }
 
         assertEquals(0, ram.getMarcosLibres(), "La RAM debe estar 100% llena");

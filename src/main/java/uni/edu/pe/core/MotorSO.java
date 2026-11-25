@@ -205,6 +205,10 @@ public class MotorSO {
         return gestorInterrupciones;
     }
 
+    public Despachador getDespachador() {
+        return despachador;
+    }
+
     public PlanificadorCPU getPlanificador() {
         return planificador;
     }

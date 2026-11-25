@@ -3,6 +3,7 @@ package uni.edu.pe;
 import com.formdev.flatlaf.FlatDarkLaf;
 import uni.edu.pe.core.MotorSO;
 import uni.edu.pe.gui.VentanaPrincipal;
+import uni.edu.pe.hardware.MemoriaRAM;
 import uni.edu.pe.model.Proceso;
 
 public class Main {
@@ -31,10 +32,11 @@ public class Main {
         System.out.println("\n--- Ejecutando 5 Ticks de Simulación ---");
         for (int i = 1; i <= 5; i++) {
             motor.step();
-            System.out.printf("[Tick %d] CPU: %s | RAM Marcos Libres: %d/32 | Desperdicio RAM: %d KB%n",
+            System.out.printf("[Tick %d] CPU: %s | RAM Marcos Libres: %d/%d | Desperdicio RAM: %d KB%n",
                     motor.getCpu().getTicksTotales(),
                     (motor.getCpu().getProcesoActual() != null ? motor.getCpu().getProcesoActual().getNombre() + " (PC=" + motor.getCpu().getProgramCounter() + ")" : "OCIOSA"),
                     motor.getRam().getMarcosLibres(),
+                    MemoriaRAM.TOTAL_MARCOS,
                     motor.getRam().calcularDesperdicioTotalKb()
             );
         }

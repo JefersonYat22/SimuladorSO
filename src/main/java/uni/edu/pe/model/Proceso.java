@@ -11,9 +11,9 @@ import java.util.Random;
  * - 5 Estados clásicos (Nuevo, Listo, Ejecutando, Bloqueado, Finalizado).
  * - Program Counter (PC) explícito.
  * - Desglose de memoria: Código, Datos (% del ejecutable) y Stack/Heap (% del ejecutable).
- * - División en páginas de 32 KB con registro de fragmentación interna.
+ * - División en páginas de 4 KB con registro de fragmentación interna.
  * - Regla del 0.5% de procesos errados (5 por cada 1,000).
- * - Generación de 5 a 20 interrupciones de E/S.
+ * - Generación de 10 a 20 interrupciones de E/S.
  * - Registro de métricas: tiempos de llegada, espera, retorno y respuesta.
  */
 public class Proceso {
@@ -39,7 +39,7 @@ public class Proceso {
     private final int tamanoVariableKb;  // Memoria dinámica (Stack/Heap) (15% a 30% del ejecutable)
     private final int tamanoTotalKb;     // Suma total requerida en memoria
 
-    // ─── PAGINACIÓN (32 KB por marco/página) ─────────────────────────────
+    // ─── PAGINACIÓN (4 KB por marco/página) ──────────────────────────────
     private final List<Pagina> paginas;
 
     // ─── ADMINISTRACIÓN DE ERRORES (Diapositiva 6, punto 8 y 9) ───────────
@@ -79,7 +79,7 @@ public class Proceso {
         this.esErrado = (random.nextInt(1000) < 5);
         this.codigoError = this.esErrado ? "ERR_0.5%_PROCESO_DEFECTUOSO" : null;
 
-        // Generar páginas de 32 KB (Memoria lógica/virtual)
+        // Generar páginas de 4 KB (Memoria lógica/virtual)
         this.paginas = new ArrayList<>();
         generarPaginas();
 
@@ -96,7 +96,7 @@ public class Proceso {
     }
 
     /**
-     * Divide la memoria total del proceso en páginas fijas de 32 KB.
+     * Divide la memoria total del proceso en páginas fijas de 4 KB.
      * El burst es del proceso, no de las páginas.
      */
     private void generarPaginas() {
@@ -112,25 +112,25 @@ public class Proceso {
     }
 
     /**
-     * Genera entre 5 y 20 interrupciones de E/S con duración entre 5 y 20 ticks.
+     * Genera entre 10 y 20 interrupciones de E/S con duración entre 5 y 20 ticks.
+     * Ecuación matemática dependiente del tamaño del proceso y del burst-time
+     * (Diapositiva 6 puntos 10-12 y Diapositiva 10 puntos 10-11).
      */
     private void generarInterrupciones() {
-        int cantInterrupciones;
-        if (tamanoTotalKb > 512 && burstTotal > 20) {
-            cantInterrupciones = 10 + random.nextInt(11); // 10 a 20
-        } else if (tamanoTotalKb > 512 || burstTotal > 20) {
-            cantInterrupciones = 7 + random.nextInt(8);   // 7 a 14
-        } else {
-            cantInterrupciones = 5 + random.nextInt(5);   // 5 a 9
-        }
+        double factorTam = Math.min(1.0, (double) tamanoTotalKb / 512.0);
+        double factorBurst = Math.min(1.0, (double) burstTotal / 50.0);
+        double factorCarga = (factorTam + factorBurst) / 2.0;
 
-        cantInterrupciones = Math.min(cantInterrupciones, Math.max(1, burstTotal / 2));
+        int baseInterrupciones = 10 + (int) Math.round(5.0 * factorCarga); // 10 a 15
+        int cantInterrupciones = Math.min(20, baseInterrupciones + random.nextInt(6)); // 10 a 20
+
         DispositivoIO[] dispositivos = DispositivoIO.values();
 
         for (int i = 0; i < cantInterrupciones; i++) {
             DispositivoIO disp = dispositivos[random.nextInt(dispositivos.length)];
             int tickDisparo = random.nextInt(Math.max(1, burstTotal));
-            int duracion = 5 + random.nextInt(16); // Duración entre 5 y 20 ticks
+            int baseDuracion = 5 + (int) Math.round(7.0 * factorCarga); // 5 a 12
+            int duracion = Math.min(20, baseDuracion + random.nextInt(9)); // 5 a 20
 
             interrupciones.add(new InterrupcionIO(disp, tickDisparo, duracion));
         }
@@ -158,7 +158,7 @@ public class Proceso {
 
     /**
      * Retorna el índice de la página lógica donde reside la instrucción actual
-     * apuntada por el Program Counter (PC / 32 KB).
+     * apuntada por el Program Counter (PC / 4 KB).
      * Basado en la Sesión 8 (Diapositiva 22): p = Dirección / TamañoMarco.
      */
     public int getPaginaPorProgramCounter() {
